@@ -10,6 +10,14 @@
 		DC1D3A33180057C00045D441 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC1D3A32180057C00045D441 /* Foundation.framework */; };
 		DC1D3A36180057C00045D441 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A35180057C00045D441 /* main.m */; };
 		DC1D3A3A180057C00045D441 /* rdap.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = DC1D3A39180057C00045D441 /* rdap.1 */; };
+		DC1D3A451800596B0045D441 /* AsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A421800596B0045D441 /* AsyncSocket.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		DC1D3A461800596B0045D441 /* AsyncUdpSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A441800596B0045D441 /* AsyncUdpSocket.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		DC1D3A491800597A0045D441 /* LDAPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A481800597A0045D441 /* LDAPServer.m */; };
+		DC1D3A4D18005D9F0045D441 /* SocketServer.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A4C18005D9F0045D441 /* SocketServer.m */; };
+		DC1D3A4F180069F30045D441 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC1D3A4E180069F30045D441 /* CFNetwork.framework */; };
+		DC1D3A581800888C0045D441 /* ber.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A571800888C0045D441 /* ber.m */; };
+		DC1D3A5C180088DA0045D441 /* LDAP.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A5B180088DA0045D441 /* LDAP.m */; };
+		DC1D3A60180471480045D441 /* RuntimeHacks.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A5F180471480045D441 /* RuntimeHacks.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,6 +39,23 @@
 		DC1D3A35180057C00045D441 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		DC1D3A38180057C00045D441 /* rdap-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "rdap-Prefix.pch"; sourceTree = "<group>"; };
 		DC1D3A39180057C00045D441 /* rdap.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = rdap.1; sourceTree = "<group>"; };
+		DC1D3A411800596B0045D441 /* AsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSocket.h; sourceTree = "<group>"; };
+		DC1D3A421800596B0045D441 /* AsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AsyncSocket.m; sourceTree = "<group>"; };
+		DC1D3A431800596B0045D441 /* AsyncUdpSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncUdpSocket.h; sourceTree = "<group>"; };
+		DC1D3A441800596B0045D441 /* AsyncUdpSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AsyncUdpSocket.m; sourceTree = "<group>"; };
+		DC1D3A471800597A0045D441 /* LDAPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDAPServer.h; sourceTree = "<group>"; };
+		DC1D3A481800597A0045D441 /* LDAPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDAPServer.m; sourceTree = "<group>"; };
+		DC1D3A4B18005D9F0045D441 /* SocketServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SocketServer.h; sourceTree = "<group>"; };
+		DC1D3A4C18005D9F0045D441 /* SocketServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SocketServer.m; sourceTree = "<group>"; };
+		DC1D3A4E180069F30045D441 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
+		DC1D3A5018006D650045D441 /* FMConsole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMConsole.h; sourceTree = "<group>"; };
+		DC1D3A5118006D650045D441 /* FMConsole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMConsole.m; sourceTree = "<group>"; };
+		DC1D3A571800888C0045D441 /* ber.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ber.m; path = LDAP/ber.m; sourceTree = "<group>"; };
+		DC1D3A59180088980045D441 /* ber.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ber.h; path = LDAP/ber.h; sourceTree = "<group>"; };
+		DC1D3A5A180088DA0045D441 /* LDAP.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LDAP.h; path = LDAP/LDAP.h; sourceTree = "<group>"; };
+		DC1D3A5B180088DA0045D441 /* LDAP.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDAP.m; path = LDAP/LDAP.m; sourceTree = "<group>"; };
+		DC1D3A5E180471480045D441 /* RuntimeHacks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RuntimeHacks.h; sourceTree = "<group>"; };
+		DC1D3A5F180471480045D441 /* RuntimeHacks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RuntimeHacks.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,6 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC1D3A4F180069F30045D441 /* CFNetwork.framework in Frameworks */,
 				DC1D3A33180057C00045D441 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -65,6 +91,7 @@
 		DC1D3A31180057C00045D441 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				DC1D3A4E180069F30045D441 /* CFNetwork.framework */,
 				DC1D3A32180057C00045D441 /* Foundation.framework */,
 			);
 			name = Frameworks;
@@ -73,9 +100,22 @@
 		DC1D3A34180057C00045D441 /* rdap */ = {
 			isa = PBXGroup;
 			children = (
+				DC1D3A411800596B0045D441 /* AsyncSocket.h */,
+				DC1D3A421800596B0045D441 /* AsyncSocket.m */,
+				DC1D3A431800596B0045D441 /* AsyncUdpSocket.h */,
+				DC1D3A441800596B0045D441 /* AsyncUdpSocket.m */,
 				DC1D3A35180057C00045D441 /* main.m */,
 				DC1D3A39180057C00045D441 /* rdap.1 */,
 				DC1D3A37180057C00045D441 /* Supporting Files */,
+				DC1D3A471800597A0045D441 /* LDAPServer.h */,
+				DC1D3A481800597A0045D441 /* LDAPServer.m */,
+				DC1D3A4B18005D9F0045D441 /* SocketServer.h */,
+				DC1D3A4C18005D9F0045D441 /* SocketServer.m */,
+				DC1D3A5018006D650045D441 /* FMConsole.h */,
+				DC1D3A5118006D650045D441 /* FMConsole.m */,
+				DC1D3A56180088660045D441 /* LowLevelLDAP */,
+				DC1D3A5E180471480045D441 /* RuntimeHacks.h */,
+				DC1D3A5F180471480045D441 /* RuntimeHacks.m */,
 			);
 			path = rdap;
 			sourceTree = "<group>";
@@ -86,6 +126,17 @@
 				DC1D3A38180057C00045D441 /* rdap-Prefix.pch */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		DC1D3A56180088660045D441 /* LowLevelLDAP */ = {
+			isa = PBXGroup;
+			children = (
+				DC1D3A5A180088DA0045D441 /* LDAP.h */,
+				DC1D3A5B180088DA0045D441 /* LDAP.m */,
+				DC1D3A59180088980045D441 /* ber.h */,
+				DC1D3A571800888C0045D441 /* ber.m */,
+			);
+			name = LowLevelLDAP;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -139,7 +190,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC1D3A5C180088DA0045D441 /* LDAP.m in Sources */,
+				DC1D3A461800596B0045D441 /* AsyncUdpSocket.m in Sources */,
+				DC1D3A4D18005D9F0045D441 /* SocketServer.m in Sources */,
 				DC1D3A36180057C00045D441 /* main.m in Sources */,
+				DC1D3A451800596B0045D441 /* AsyncSocket.m in Sources */,
+				DC1D3A491800597A0045D441 /* LDAPServer.m in Sources */,
+				DC1D3A581800888C0045D441 /* ber.m in Sources */,
+				DC1D3A60180471480045D441 /* RuntimeHacks.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -217,6 +275,7 @@
 		DC1D3A3E180057C00045D441 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "rdap/rdap-Prefix.pch";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -226,6 +285,7 @@
 		DC1D3A3F180057C00045D441 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "rdap/rdap-Prefix.pch";
 				PRODUCT_NAME = "$(TARGET_NAME)";

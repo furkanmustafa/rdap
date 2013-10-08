@@ -7,16 +7,37 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "LDAPServer.h"
 
-int main(int argc, const char * argv[])
-{
+void InterruptHandler(int signal);
+
+int main(int argc, const char * argv[]) {
 
 	@autoreleasepool {
-	    
-	    // insert code here...
-	    NSLog(@"Hello, World!");
-	    
+	
+		NSRunLoop* runloop = [NSRunLoop currentRunLoop];
+		
+		signal(SIGINT, &InterruptHandler);
+		signal(SIGTERM, &InterruptHandler);
+		signal(SIGKILL, &InterruptHandler);
+		
+		LDAPServer.sharedServer.port = 1389;
+		[LDAPServer.sharedServer start];
+		
+		[runloop run];
+		
 	}
     return 0;
 }
 
+void InterruptHandler(int signal) {
+
+	static BOOL gotSignal = NO;
+	if (gotSignal) return;
+	gotSignal = YES;
+
+	NSLog(@"received signal");
+
+	[LDAPServer.sharedServer stop];
+	
+}
