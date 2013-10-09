@@ -219,7 +219,7 @@
 }
 + (BOOL)matchesBERType:(uint8_t)type {
 	// there should be more
-	return (type & BER_String) == BER_String;
+	return (type & 0x0F) == BER_String;
 }
 + (id)withBERData:(NSData *)data {
 	NSString* string = [NSString.alloc initWithData:data encoding:NSASCIIStringEncoding];

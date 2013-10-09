@@ -34,7 +34,19 @@
 	if (message.operation.type == LDAP_BindRequest) {
 		LDAPOperation* response = [self responseForBindRequest:message.operation inMessage:message];
 		[connection sendMessage:response.envelope];
+		return;
 	}
+	if (message.operation.type == LDAP_ExtendedRequest) {
+		LDAPOperation* response = [self responseForExtendedRequest:message.operation inMessage:message];
+		[connection sendMessage:response.envelope];
+		return;
+	}
+	if (message.operation.type == LDAP_SearchRequest) {
+		LDAPOperation* response = [self responseForSearchRequest:message.operation inMessage:message];
+		[connection sendMessage:response.envelope];
+		return;
+	}
+	
 }
 - (void)connection:(LDAPConnection *)connection didRaiseError:(NSError *)error {
 	[self connectionDone:connection withError:error];
@@ -43,6 +55,13 @@
 #pragma mark - 
 #pragma mark LDAP Application Level Functions
 #pragma mark -
+
+- (LDAPOperation*)responseWithOperationType:(LDAPProtocolOperation)type withResult:(LDAPResult*)result {
+	LDAPOperation* response = [LDAPOperation.new autorelease];
+	response.type = type;
+	[response.payloadObjects addObjectsFromArray:result.payloadObjects];
+	return response;
+}
 
 #pragma mark Bind
 
@@ -58,17 +77,10 @@
 	node.dn = dn;
 	return [node autorelease];
 }
-- (LDAPOperation*)responseWithOperationType:(LDAPProtocolOperation)type withResult:(LDAPResult*)result {
-	LDAPOperation* response = [LDAPOperation.new autorelease];
-	response.type = LDAP_BindResponse;
-	[response.payloadObjects addObjectsFromArray:result.payloadObjects];
-	// also add sasl result, to the objects, when you start supporting it.
-	return response;
-}
 - (LDAPOperation*)responseForBindRequest:(LDAPOperation*)bindRequest inMessage:(LDAPMessageEnvelope*)message {
 	NSUInteger ldapVersion = [bindRequest.payloadObjects[0] integerValue];
 	LDAPResult* result = [LDAPResult.new autorelease];
-	result.diagnosticMessage = @"Hepiniz topsunuz";
+	result.diagnosticMessage = @"Error";
 	if (ldapVersion != 3 || bindRequest.payloadObjects.count < 3) {
 		// rfc4511 - 4.2. Bind Operation
 		// If the server does not
@@ -111,6 +123,8 @@
 			if ([self authenticateUsingDN:dn andPassword:password]) {
 				self.bindedDN = dn;
 				// result = `success`
+				
+				// also add sasl result, to the objects, when you start supporting it.
 				result.resultCode = LDAPResult_success;
 				return [self responseWithOperationType:LDAP_BindResponse withResult:result];
 			} else {
@@ -140,6 +154,35 @@
 	 credentials are valid and that the server is willing to provide
 	 service to the entity these credentials identify.
 	 */
+}
+
+#pragma mark Extended
+
+- (LDAPOperation*)responseForExtendedRequest:(LDAPOperation*)request inMessage:(LDAPMessageEnvelope*)message {
+	LDAPResult* result = [LDAPResult.new autorelease];
+	
+	NSString* requestName = [NSString withBERData:request.payloadObjects[0]];
+	NSLog(@"--> Extended Request : %@", requestName);
+	if ([requestName isEqualToString:@"1.3.6.1.4.1.1466.20037"]) { // StartTLS
+		
+		result.resultCode = LDAPResult_success;
+		LDAPOperation* response = [self responseWithOperationType:LDAP_ExtendedResponse withResult:result];
+		NSString* responseName = @"1.3.6.1.4.1.1466.20037"; // go on..
+		responseName.berType = BER_Context | BER_Enumeration;
+		[response.payloadObjects addObject:responseName];
+		
+		// 		[connection.socket startTLS:nil]; (after successfully sending the data)
+		
+		return response;
+		
+	}
+	
+	
+	result.resultCode = LDAPResult_unwillingToPerform;
+	return [self responseWithOperationType:LDAP_ExtendedResponse withResult:result];
+}
+- (LDAPOperation*)responseForSearchRequest:(LDAPOperation*)request inMessage:(LDAPMessageEnvelope*)message {
+	return nil;
 }
 
 @end
