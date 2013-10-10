@@ -162,21 +162,21 @@
 	}
 	else if (data.length==1) {
 		uint8_t number = (uint8_t)*value;
-		theNumber = [NSNumber.alloc initWithUnsignedChar:number];
+		theNumber = [NSNumber.alloc initWithUnsignedChar:number].autorelease;
 	} else if (data.length==2) {
 		uint16_t number = (uint16_t)*value;
-		theNumber = [NSNumber.alloc initWithUnsignedShort:number];
+		theNumber = [NSNumber.alloc initWithUnsignedShort:number].autorelease;
 	} else if (data.length==4) {
 		uint32_t number = (uint32_t)*value;
-		theNumber = [NSNumber.alloc initWithUnsignedInt:number];
+		theNumber = [NSNumber.alloc initWithUnsignedInt:number].autorelease;
 	} else if (data.length==8) {
 		uint64_t number = (uint64_t)*value;
-		theNumber = [NSNumber.alloc initWithUnsignedLong:number];
+		theNumber = [NSNumber.alloc initWithUnsignedLong:number].autorelease;
 	} else {
 		NSLog(@"Unsupported Integer Size : %lu", data.length);
 	}
 	theNumber.berType = data.berType;
-	return [theNumber autorelease];
+	return theNumber;
 }
 - (NSData *)berData {
 	unsigned long value = self.unsignedLongValue;
@@ -222,7 +222,7 @@
 	return (type & 0x0F) == BER_String;
 }
 + (id)withBERData:(NSData *)data {
-	NSString* string = [NSString.alloc initWithData:data encoding:NSASCIIStringEncoding];
+	NSString* string = [NSString.alloc initWithData:data encoding:NSASCIIStringEncoding].autorelease;
 	string.berType = data.berType;
 	return string;
 }

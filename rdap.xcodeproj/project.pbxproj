@@ -18,6 +18,8 @@
 		DC1D3A581800888C0045D441 /* ber.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A571800888C0045D441 /* ber.m */; };
 		DC1D3A5C180088DA0045D441 /* LDAP.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A5B180088DA0045D441 /* LDAP.m */; };
 		DC1D3A60180471480045D441 /* RuntimeHacks.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3A5F180471480045D441 /* RuntimeHacks.m */; };
+		DC1D3AEF180597830045D441 /* LDAPRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3AEE180597830045D441 /* LDAPRequest.m */; };
+		DC1D3AF2180598030045D441 /* LDAPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D3AF1180598030045D441 /* LDAPResponse.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -56,6 +58,10 @@
 		DC1D3A5B180088DA0045D441 /* LDAP.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDAP.m; path = LDAP/LDAP.m; sourceTree = "<group>"; };
 		DC1D3A5E180471480045D441 /* RuntimeHacks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RuntimeHacks.h; sourceTree = "<group>"; };
 		DC1D3A5F180471480045D441 /* RuntimeHacks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RuntimeHacks.m; sourceTree = "<group>"; };
+		DC1D3AED180597830045D441 /* LDAPRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LDAPRequest.h; path = LDAP/LDAPRequest.h; sourceTree = "<group>"; };
+		DC1D3AEE180597830045D441 /* LDAPRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDAPRequest.m; path = LDAP/LDAPRequest.m; sourceTree = "<group>"; };
+		DC1D3AF0180598030045D441 /* LDAPResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LDAPResponse.h; path = LDAP/LDAPResponse.h; sourceTree = "<group>"; };
+		DC1D3AF1180598030045D441 /* LDAPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDAPResponse.m; path = LDAP/LDAPResponse.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +141,10 @@
 				DC1D3A5B180088DA0045D441 /* LDAP.m */,
 				DC1D3A59180088980045D441 /* ber.h */,
 				DC1D3A571800888C0045D441 /* ber.m */,
+				DC1D3AED180597830045D441 /* LDAPRequest.h */,
+				DC1D3AEE180597830045D441 /* LDAPRequest.m */,
+				DC1D3AF0180598030045D441 /* LDAPResponse.h */,
+				DC1D3AF1180598030045D441 /* LDAPResponse.m */,
 			);
 			name = LowLevelLDAP;
 			sourceTree = "<group>";
@@ -193,11 +203,13 @@
 				DC1D3A5C180088DA0045D441 /* LDAP.m in Sources */,
 				DC1D3A461800596B0045D441 /* AsyncUdpSocket.m in Sources */,
 				DC1D3A4D18005D9F0045D441 /* SocketServer.m in Sources */,
+				DC1D3AEF180597830045D441 /* LDAPRequest.m in Sources */,
 				DC1D3A36180057C00045D441 /* main.m in Sources */,
 				DC1D3A451800596B0045D441 /* AsyncSocket.m in Sources */,
 				DC1D3A491800597A0045D441 /* LDAPServer.m in Sources */,
 				DC1D3A581800888C0045D441 /* ber.m in Sources */,
 				DC1D3A60180471480045D441 /* RuntimeHacks.m in Sources */,
+				DC1D3AF2180598030045D441 /* LDAPResponse.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -311,6 +323,7 @@
 				DC1D3A3F180057C00045D441 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

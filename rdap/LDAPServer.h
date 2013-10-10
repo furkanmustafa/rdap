@@ -33,8 +33,10 @@
 - (void)idleListen;
 - (BOOL)sendMessageWith:(id)messageObj;
 - (BOOL)sendMessage:(LDAPMessageEnvelope*)message;
+- (BOOL)sendMessage:(LDAPMessageEnvelope*)message completionBlock:(void(^)(BOOL wrote))onComplete;
 
 @property (nonatomic,retain) NSMutableData* requestPayload;
+@property (nonatomic,copy) void (^writeCompletionBlock) (BOOL wrote);
 @property (nonatomic,readwrite) NSInteger expectedLength;
 @property (nonatomic,assign) id<LDAPConnectionDelegate> delegate;
 @property (nonatomic,readwrite) NSUInteger sentMessageCount;

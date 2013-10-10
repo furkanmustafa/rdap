@@ -9,6 +9,8 @@
 #import "LDAP.h"
 #import "ber.h"
 #import <objc/runtime.h>
+#import "LDAPRequest.h"
+#import "LDAPResponse.h"
 
 // http://tools.ietf.org/html/rfc4512#section-5.1
 // commented ones are response objects, defined in : http://tools.ietf.org/html/rfc4517
@@ -145,7 +147,32 @@ extern NSString* const LDAPControl_supportedSASLMechanisms;
 
 @end
 
+NSMutableArray* ldapOperations;
 @implementation LDAPOperation
+
++ (void)load {
+	ldapOperations = NSMutableArray.new;
+}
++ (void)registerClass:(Class)class {
+	[ldapOperations addObject:class];
+}
++(uint8_t)ldapOperationType {
+	NSAssert(NO, @"Override this");
+	return 0xFF;
+}
++(NSString *)ldapOperationTypeName {
+	NSAssert(NO, @"Override this");
+	return nil;
+}
++(Class)classWithType:(uint8_t)type {
+	type &= ~(BER_Application | BER_Struct);
+	for (Class aClass in ldapOperations) {
+		if ([aClass ldapOperationType]==type) {
+			return aClass;
+		}
+	}
+	return nil;
+}
 
 - (void)dealloc {
 	self.payloadObjects = nil;
@@ -158,26 +185,24 @@ extern NSString* const LDAPControl_supportedSASLMechanisms;
 	return _payloadObjects;
 }
 - (BOOL)isRequest {
-	if (_type == LDAP_BindRequest ||
-		_type == LDAP_AddRequest ||
-		_type == LDAP_AbandonRequest ||
-		_type == LDAP_CompareRequest ||
-		_type == LDAP_DelRequest ||
-		_type == LDAP_ExtendedRequest ||
-		_type == LDAP_ModifyRDNRequest ||
-		_type == LDAP_ModifyRequest ||
-		_type == LDAP_SearchRequest ||
-		_type == LDAP_UnbindRequest
-		) return YES;
-	return NO;
+	return [self isKindOfClass:LDAPRequest.class];
 }
-+ (instancetype)operationWithType:(LDAPProtocolOperation)type data:(NSData*)data {
-	NSLog(@"\tNew Operation With Type:%02x and Objects:", type);
-	LDAPOperation* new = LDAPOperation.new;
-	new.type = type;
+- (LDAPProtocolOperation)type {
+	return self.class.ldapOperationType;
+}
++ (id)operationWithType:(LDAPProtocolOperation)type {
+	Class operationClass = [self classWithType:type];
+	NSAssert(operationClass, @"Unsupported operation : %02x", type);
+	
+	LDAPOperation* new = [operationClass new];
+	NSLog(@"\tNew Operation With Type:%02x %@ and Objects:", type, NSStringFromClass(operationClass));
+	return [new autorelease];
+}
++ (id)operationWithType:(LDAPProtocolOperation)type data:(NSData*)data {
+	LDAPOperation* new = [self operationWithType:type];
 	new.payloadObjects = [[data.berExtract mutableCopy] autorelease];
 	NSLog(@"\t---- %lu objects", new.payloadObjects.count);
-	return [new autorelease];
+	return new;
 }
 - (LDAPMessageEnvelope*)envelope {
 	LDAPMessageEnvelope* newEnvelope = [LDAPMessageEnvelope.new autorelease];
@@ -185,12 +210,7 @@ extern NSString* const LDAPControl_supportedSASLMechanisms;
 	return newEnvelope;
 }
 + (id)withBERData:(NSData *)data {
-	NSLog(@"\tNew Operation With Type:%02x and Objects:", data.berType);
-	LDAPOperation* new = LDAPOperation.new;
-	new.type = data.berType & ~(BER_Application | BER_Struct);
-	new.payloadObjects = [[data.berExtract mutableCopy] autorelease];
-	NSLog(@"\t---- %lu objects", new.payloadObjects.count);
-	return [new autorelease];
+	return [self operationWithType:data.berType & ~(BER_Application | BER_Struct) data:data];
 }
 + (BOOL)matchesBERType:(uint8_t)type {
 	return (type & BER_Application);
@@ -201,7 +221,7 @@ extern NSString* const LDAPControl_supportedSASLMechanisms;
 	return combined;
 }
 - (uint8_t)berType {
-	if (self.type == LDAP_BindRequest || self.type == LDAP_BindResponse)
+	if (self.type == LDAP_BindRequest || self.type == LDAP_BindResponse || self.type == LDAP_ExtendedResponse)
 		return self.type | BER_Constructor | BER_Application;
 	return self.type | BER_Application;
 }
@@ -213,6 +233,38 @@ extern NSString* const LDAPControl_supportedSASLMechanisms;
 - (void)dealloc {
 	self.dn = nil;
 	[super dealloc];
+}
+
+@end
+
+@implementation SaslCredentials
+
+- (void)dealloc {
+	self.mechanism = nil;
+	self.credentials = nil;
+    [super dealloc];
+}
++ (id)withBERData:(NSData *)data {
+	NSArray* objects = data.berExtract;
+	if (!objects || objects.count==0)
+		return nil;
+	SaslCredentials* new = SaslCredentials.new;
+	new.mechanism = objects[0];
+	new.credentials = objects.count > 1 ? objects[1] : nil;
+	return [new autorelease];
+}
+- (uint8_t)berType {
+	// TODO
+	return 0x00;
+}
+- (NSData *)berData {
+	NSData* berData = [NSData berCombine:@[ _mechanism, _credentials ]];
+	berData.berType = self.berType;
+	return berData;
+}
++ (BOOL)matchesBERType:(uint8_t)type {
+	// TODO
+	return NO;
 }
 
 @end

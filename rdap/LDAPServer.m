@@ -8,6 +8,8 @@
 
 #import "LDAPServer.h"
 #import "ber.h"
+#import "LDAPRequest.h"
+#import "LDAPResponse.h"
 
 @implementation LDAPServer
 
@@ -31,36 +33,39 @@
 
 - (void)connection:(LDAPConnection*)connection didReceiveMessage:(LDAPMessageEnvelope *)message {
 	NSLog(@" # # # RECEIVED A MESSAGE : !!! %@", message);
-	if (message.operation.type == LDAP_BindRequest) {
-		LDAPOperation* response = [self responseForBindRequest:message.operation inMessage:message];
-		[connection sendMessage:response.envelope];
-		return;
-	}
-	if (message.operation.type == LDAP_ExtendedRequest) {
-		LDAPOperation* response = [self responseForExtendedRequest:message.operation inMessage:message];
-		[connection sendMessage:response.envelope];
-		return;
-	}
-	if (message.operation.type == LDAP_SearchRequest) {
-		LDAPOperation* response = [self responseForSearchRequest:message.operation inMessage:message];
-		[connection sendMessage:response.envelope];
-		return;
-	}
 	
+	message.operation.application = self;
+	message.operation.connection = connection;
+	
+	[self processRequest:(LDAPRequest*)message.operation];
 }
+
 - (void)connection:(LDAPConnection *)connection didRaiseError:(NSError *)error {
 	[self connectionDone:connection withError:error];
 }
 
-#pragma mark - 
-#pragma mark LDAP Application Level Functions
+#pragma mark - LDAP Application Level Functions
 #pragma mark -
 
-- (LDAPOperation*)responseWithOperationType:(LDAPProtocolOperation)type withResult:(LDAPResult*)result {
-	LDAPOperation* response = [LDAPOperation.new autorelease];
-	response.type = type;
-	[response.payloadObjects addObjectsFromArray:result.payloadObjects];
-	return response;
+- (void)processRequest:(LDAPRequest*)request {
+	if (request.type == LDAP_BindRequest) {
+		[self processBindRequest:(LDAPBindRequest*)request];
+		return;
+	}
+	
+	if (request.type == LDAP_ExtendedRequest) {
+		[self processExtendedRequest:(LDAPExtendedRequest*)request];
+		return;
+	}
+	
+	//	if (!self.bindedDN) {
+	//		// NOT AUTHENTICATED, REFUSE FOR REQUESTS BELOW
+	//	}
+	
+	if (request.type == LDAP_SearchRequest) {
+		[self processSearchRequest:(LDAPSearchRequest*)request];
+		return;
+	}
 }
 
 #pragma mark Bind
@@ -77,17 +82,19 @@
 	node.dn = dn;
 	return [node autorelease];
 }
-- (LDAPOperation*)responseForBindRequest:(LDAPOperation*)bindRequest inMessage:(LDAPMessageEnvelope*)message {
-	NSUInteger ldapVersion = [bindRequest.payloadObjects[0] integerValue];
-	LDAPResult* result = [LDAPResult.new autorelease];
-	result.diagnosticMessage = @"Error";
-	if (ldapVersion != 3 || bindRequest.payloadObjects.count < 3) {
+
+- (void)processBindRequest:(LDAPBindRequest*)bindRequest {
+	LDAPBindResponse* response = [LDAPBindResponse.new autorelease];
+	
+	if (bindRequest.protocolVersion != 3 || !bindRequest.dn) {
 		// rfc4511 - 4.2. Bind Operation
 		// If the server does not
 		// support the specified version, it MUST respond with a BindResponse
 		// where the resultCode is set to protocolError.
-		result.resultCode = LDAPResult_protocolError;
-		return [self responseWithOperationType:LDAP_BindResponse withResult:result];
+		response.result.resultCode = LDAPResult_protocolError;
+		response.result.diagnosticMessage = @"Error";
+		[bindRequest.connection sendMessage:response.envelope];
+		return;
 	}
 	// rfc4513 - 5. Bind Operation
 	// The server
@@ -98,51 +105,45 @@
 	// rfc4513  5.1.2, only DN, no authentication ( The value is not to be
 	//			used (directly or indirectly) for authorization purposes.)
 	
-	NSString* dn = bindRequest.payloadObjects[1];  // rfc4514 String Representation of Distinguished Names
-	if (!dn || dn.length == 0 || ![self validateDN:dn]) {
-		result.resultCode = LDAPResult_invalidDNSyntax;
-		return [self responseWithOperationType:LDAP_BindResponse withResult:result];
+	if (![self validateDN:bindRequest.dn]) {
+		response.result.resultCode = LDAPResult_invalidDNSyntax;
+		response.result.diagnosticMessage = @"Error";
+		[bindRequest.connection sendMessage:response.envelope];
+		return;
 	}
-	LDAPNode* node = [self getDN:dn];
+	LDAPNode* node = [self getDN:bindRequest.dn];
 	// maybe check existence of dn, and return `noSuchObject` even before checking auth.
 	if (!node) {
-		result.resultCode = LDAPResult_noSuchObject;
-		return [self responseWithOperationType:LDAP_BindResponse withResult:result];
+		response.result.resultCode = LDAPResult_noSuchObject;
+		response.result.diagnosticMessage = @"Error";
+		[bindRequest.connection sendMessage:response.envelope];
+		return;
 	}
 
-	result.matchedDN = dn;
-
-	NSData* authentication = bindRequest.payloadObjects[2];
+	response.result.matchedDN = bindRequest.dn;
 	
-	if (authentication.berType & BER_Context) {
-		NSUInteger choice = authentication.berType & ~BER_Context;
-		if (choice == 0) { // OCTET STRING
-			// widely used
-			NSString* password = [NSString.alloc initWithData:authentication encoding:NSASCIIStringEncoding].autorelease;
-			
-			if ([self authenticateUsingDN:dn andPassword:password]) {
-				self.bindedDN = dn;
-				// result = `success`
-				
-				// also add sasl result, to the objects, when you start supporting it.
-				result.resultCode = LDAPResult_success;
-				return [self responseWithOperationType:LDAP_BindResponse withResult:result];
-			} else {
-				// result = `invalidCredentials`
-				result.resultCode = LDAPResult_invalidCredentials;
-				return [self responseWithOperationType:LDAP_BindResponse withResult:result];
-			}
-			
-		} else if (choice == 3) { // SASL
-			// not used at all
-			result.resultCode = LDAPResult_authMethodNotSupported;
-			return [self responseWithOperationType:LDAP_BindResponse withResult:result];
+	if (bindRequest.simpleAuthentication) {
+		if ([self authenticateUsingDN:bindRequest.dn andPassword:bindRequest.simpleAuthentication]) {
+			self.bindedDN = bindRequest.dn;
+			response.result.resultCode = LDAPResult_success;
+			[bindRequest.connection sendMessage:response.envelope];
+			return;
+		} else {
+			response.result.resultCode = LDAPResult_invalidCredentials;
+			response.result.diagnosticMessage = @"UserError";
+			[bindRequest.connection sendMessage:response.envelope];
+			return;
 		}
+	} else { //if (bindRequest.saslAuthentication) {
+		response.result.resultCode = LDAPResult_authMethodNotSupported;
+		response.result.diagnosticMessage = @"Error";
+		[bindRequest.connection sendMessage:response.envelope];
+		return;
 	}
 	
-	result.matchedDN = nil;
-	result.resultCode = LDAPResult_protocolError;
-	return [self responseWithOperationType:LDAP_BindResponse withResult:result];
+	response.result.matchedDN = nil;
+	response.result.resultCode = LDAPResult_protocolError;
+	[bindRequest.connection sendMessage:response.envelope];
 
 	/*
 	 A resultCode of `invalidDNSyntax` indicates that the DN sent in the
@@ -158,31 +159,43 @@
 
 #pragma mark Extended
 
-- (LDAPOperation*)responseForExtendedRequest:(LDAPOperation*)request inMessage:(LDAPMessageEnvelope*)message {
-	LDAPResult* result = [LDAPResult.new autorelease];
+NSString* const ExtendedRequest_StartTLS = @"1.3.6.1.4.1.1466.20037";
+- (void)processExtendedRequest:(LDAPExtendedRequest*)request {
+	LDAPExtendedResponse* response = [LDAPExtendedResponse.new autorelease];
+	response.request = request;
 	
-	NSString* requestName = [NSString withBERData:request.payloadObjects[0]];
-	NSLog(@"--> Extended Request : %@", requestName);
-	if ([requestName isEqualToString:@"1.3.6.1.4.1.1466.20037"]) { // StartTLS
+	// START TLS
+	if ([request.name isEqualToString:ExtendedRequest_StartTLS]) {
+		// OK
+		response.name = [ExtendedRequest_StartTLS.copy autorelease];
+		response.result.resultCode = LDAPResult_success;
+
+//		__block LDAPExtendedRequest* connRequest = [[request retain] retain];
+		[request.connection sendMessage:response.envelope completionBlock:^(BOOL wrote) {
+			NSLog(@"Starting TLS Negotiation");
+//			[request.connection.socket startTLS:nil];
+		}];
+		[request.connection.socket startTLS:@{
+											  (NSString*)kCFStreamSSLAllowsExpiredCertificates: @(YES),
+											  (NSString*)kCFStreamSSLAllowsAnyRoot: @(YES),
+											  (NSString*)kCFStreamSSLValidatesCertificateChain: @(NO),
+											  (NSString*)kCFStreamSSLIsServer: @(YES),
+											  (NSString*)kCFStreamSSLPeerName: @"10.0.76.20",
+											  (NSString*)kCFStreamSSLLevel: (NSString*)kCFStreamSocketSecurityLevelNegotiatedSSL //kCFStreamSocketSecurityLevelTLSv1
+											  }];
 		
-		result.resultCode = LDAPResult_success;
-		LDAPOperation* response = [self responseWithOperationType:LDAP_ExtendedResponse withResult:result];
-		NSString* responseName = @"1.3.6.1.4.1.1466.20037"; // go on..
-		responseName.berType = BER_Context | BER_Enumeration;
-		[response.payloadObjects addObject:responseName];
+		[request.connection.socket writeString:@"secure top"];
 		
-		// 		[connection.socket startTLS:nil]; (after successfully sending the data)
-		
-		return response;
-		
+		return;
 	}
-	
-	
-	result.resultCode = LDAPResult_unwillingToPerform;
-	return [self responseWithOperationType:LDAP_ExtendedResponse withResult:result];
+	response.result.resultCode = LDAPResult_unwillingToPerform;
+//	response.result.diagnosticMessage = @"Error";
+	[request.connection sendMessage:response.envelope];
+	return;
 }
-- (LDAPOperation*)responseForSearchRequest:(LDAPOperation*)request inMessage:(LDAPMessageEnvelope*)message {
-	return nil;
+
+- (void)processSearchRequest:(LDAPSearchRequest*)request {
+	
 }
 
 @end
@@ -196,6 +209,11 @@
 
 @implementation LDAPConnection
 
+- (void)dealloc {
+	self.writeCompletionBlock = nil;
+	self.requestPayload = nil;
+	[super dealloc];
+}
 - (void)protocolError:(NSError*)error {
 	// just close.
 	[self.socket disconnect];
@@ -205,7 +223,11 @@
 - (void)idleListen {
 	[self.socket readDataToLength:2 withTimeout:LDAPIdleTimeout tag:LDAP_WaitingMessage];;
 }
-
+- (void)onSocketDidSecure:(AsyncSocket *)sock {
+	NSLog(@"Secured Connection, listening");
+	[self.socket writeString:@"hey ssl, naber dostum??"];
+//	[self idleListen];
+}
 - (void)onSocketDidConnect:(AsyncSocket *)sock {
 	NSLog(@"New Connection");
 	[self idleListen];
@@ -279,7 +301,7 @@
 	
 	return [self sendMessage:envelope];
 }
-- (BOOL)sendMessage:(LDAPMessageEnvelope*)message {
+- (BOOL)sendMessage:(LDAPMessageEnvelope*)message completionBlock:(void(^)(BOOL wrote))onComplete {
 	if (!message.messageID || message.messageID == UINT32_MAX) {
 		message.messageID = ++_sentMessageCount;
 	}
@@ -287,11 +309,20 @@
 	if (!data) return NO;
 	NSLog(@"Sending Message With Data : %@", data);
 	[self.socket writeData:data withTimeout:LDAPIdleTimeout tag:LDAP_WritingMessage];
+	self.writeCompletionBlock = onComplete;
 	return YES;
+}
+- (BOOL)sendMessage:(LDAPMessageEnvelope*)message {
+	return [self sendMessage:message completionBlock:nil];
 }
 - (void)onSocket:(AsyncSocket *)sock didWriteDataWithTag:(long)tag {
 	if (tag==LDAP_WritingMessage) {
-		[self idleListen];
+		if (self.writeCompletionBlock) {
+			self.writeCompletionBlock(true);
+			self.writeCompletionBlock = nil;
+		} else {
+			[self idleListen];
+		}
 	}
 }
 

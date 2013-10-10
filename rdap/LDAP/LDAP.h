@@ -140,14 +140,19 @@ extern NSString* const LDAPControl_supportedSASLMechanisms;
 
 @end
 
+@class LDAPConnection;
 @interface LDAPOperation : NSObject <BEREncoding>
 
-+ (instancetype)operationWithType:(LDAPProtocolOperation)type data:(NSData*)data;
++ (void)registerClass:(Class)class;
++ (id)operationWithType:(LDAPProtocolOperation)type;
++ (id)operationWithType:(LDAPProtocolOperation)type data:(NSData*)data;
 - (LDAPMessageEnvelope*)envelope;
 
 @property (nonatomic,readwrite) LDAPProtocolOperation type;
 @property (nonatomic,retain) NSMutableArray* payloadObjects;
 @property (nonatomic,readonly) BOOL isRequest;
+@property (nonatomic,assign) id application;
+@property (nonatomic,assign) LDAPConnection* connection;
 
 @end
 
@@ -155,4 +160,9 @@ extern NSString* const LDAPControl_supportedSASLMechanisms;
 
 @property (nonatomic,retain) NSString *dn;
 
+@end
+
+@interface SaslCredentials : NSObject <BEREncoding>
+@property (nonatomic,retain) NSString* mechanism;
+@property (nonatomic,retain) NSString* credentials;
 @end
